@@ -1,0 +1,38 @@
+{
+  "name": "Speeds",
+  "version": "1.0.0",
+  "description": "Super speeder. www.igamep.com",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Ricky",
+  "license": "ISC",
+  "build": {
+    "productName": "草莓加速器",
+    "win": {
+      "target": [
+        {
+          "target": "nsis"
+        }
+      ]
+    },
+    "extraFiles": [
+      "resources/dll",
+      "NewProxy.dll",
+      "Proxy.dll"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^6.0.10",
+    "electron-builder": "^21.2.0",
+    "electron-reloader": "^1.1.0"
+  },
+  "dependencies": {
+    "electron-edge-js": "^12.18.4",
+    "ffi-napi": "^2.4.5"
+  }
+}

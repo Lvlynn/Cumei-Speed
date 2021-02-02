@@ -1,0 +1,284 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <title>草莓加速器 - Cu Mei Speeder</title>
+
+  <script src="./resources/js/vue.min.js"></script>
+
+  <!-- Bootstrap core CSS -->
+  <link href="./resources/css/bootstrap.css" rel="stylesheet">
+
+  <meta name="theme-color" content="#563d7c">
+
+
+  <style>
+    body{
+      user-select: none;
+    }
+    .hide{
+      display: none;
+    }
+    .show{
+      display: block;
+    }
+  </style>
+  <!-- Custom styles for this template -->
+</head>
+<body>
+<div id="app" class="hide">
+<main role="main" class="flex-shrink-0" style="margin-top: 0">
+  <div class="container">
+    <h1 class="mt-1">草莓加速器</h1>
+    <p class="lead">
+      欢迎回来
+    </p>
+    <div class="row">
+
+      <div class="col-sm-12">
+
+        <div class="card" style="">
+          <div class="card-body">
+            <h5 class="card-title">免费、快速、稳定的加速器</h5>
+            <h6 class="card-subtitle mb-2 text-muted">国内极少数为玩家开发的加速器</h6>
+            <p class="card-text">还在为和朋友联机，其他加速器贵、国内玩家联机不稳定、国外服务器节点丢包率高而烦恼吗？</p>
+            <a href="#" class="card-link">官网</a>
+            <a href="#" class="card-link">关于</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12">
+        <a v-bind:disabled="connect==2 || connect==3" v-bind:class="{'btn': true, 'btn-primary': !on, 'btn-danger': on, 'btn-block': true}" href="#" @click="trigger()">{{ connectStr }}</a>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 30px">
+
+      <div class="col-sm-6">
+
+        <p>请选择游戏</p>
+        <ul class="list-group" v-if="games.length>0">
+          <li v-for="(value,index) in games" :key="index" @click="gameClick(value)" v-bind:class="{'list-group-item':true, 'active':game.name==value.name}">{{ value.name }}</li>
+        </ul>
+        <ul class="list-group" v-else>
+          <li class="list-group-item">Opps！没有游戏</li>
+        </ul>
+      </div>
+      <div class="col-sm-6">
+        <p>请选择节点</p>
+        <ul class="list-group" v-if="nodes.length>0">
+          <li v-for="(value,index) in nodes" :key="index" @click="nodeClick(value)" v-bind:class="{'list-group-item':true, 'active':node.name==value.name}">{{ value.name }}</li>
+
+        </ul>
+        <ul class="list-group" v-else>
+          <li class="list-group-item">Opps！没有节点</li>
+        </ul>
+      </div>
+
+
+    </div>
+
+  </div>
+</main>
+<footer class="footer mt-auto py-3">
+  <div class="container">
+    <span class="text-muted">Version 1.0 Copyright&copy; 2021 All right served.</span>
+    <!--We are using node
+    <script>document.write(process.versions.node)</script>, Chrome
+    <script>document.write(process.versions.chrome)</script>, and Electron
+    <script>document.write(process.versions.electron)</script>.-->
+  </div>
+</footer>
+</div>
+</body>
+<script src="./resources/js/jquery.min.js"></script>
+<script src="./resources/js/popper.min.js"></script>
+<script src="./resources/js/bootstrap.min.js"></script>
+<script>
+  var vm = new Vue({
+    el: '#app',
+    data: {
+      game: [],
+      node: [],
+      games: [],
+      nodes: [],
+      api: 'https://iot.yeapcloud.cn/jiasuqi/',
+      on: false,
+      connect: 0
+    },
+    computed: {
+      // 计算属性的 getter
+      connectStr: function () {
+        // `this` 指向 vm 实例
+        switch(this.connect){
+          case 0: return '连接';break;
+          case 1: return '断开';break;
+          case 2: return '连接中';break;
+          case 3: return '断开中';break;
+        }
+      }
+    },
+    mounted(){
+      let path = require('path');
+      try {
+        // Call *.dll with ffi
+        let ffi = require('ffi-napi');
+        //
+        // alert(path.resolve('./dll/HookProxy.dll'))
+        // Create funtions
+        /* window.Dll = ffi.Library('dll/MyDLL.dll', {
+          'Add': ['float', ['float', 'float']],
+          'Hello': ['string', []],
+          'StrLength': ['int', ['string']]
+        })*/
+
+        window.dll = new ffi.Library('resources/dll/HookProxy.dll', {
+          SetProxy:
+                  [
+                    'bool',['bool','string','string','int','string','string','string']
+                  ],
+          CheckSocks5:
+                  [
+                    'bool',['string','int','string','string']
+                  ],
+          StopProxy:
+                  ['void',
+                    []
+                  ]
+        })
+
+        console.log('fii.Library result:',dll);
+        window.ele = require('electron')
+
+        $('#app').removeClass('hide')
+        $('#app').addClass('show')
+        // Call C++ function Hello
+        // document.getElementById('hello').innerHTML = Dll.Hello()
+      } catch (error) {
+        alert('资源载入失败，建议您从官网重新下载！')
+        console.error('ffi.Library', error);
+      }
+
+      const edge = require('electron-edge-js')
+      // const path = require('path')
+      // console.log(path.resolve('D:/others/igamep/speeds/NewProxy.dll'))
+      let invoke = edge.func({
+        assemblyFile: path.resolve('NewProxy.dll'),
+        typeName: 'dmain',
+        methodName: 'Driver_Init'
+      })
+
+      this.loadConfig()
+
+    },
+    methods: {
+      loadConfig(){
+        let that = this;
+        $.get(this.api+'node/', function(res){
+          that.nodes = res.data;
+          //console.log(res.data)
+        },'json')
+        $.get(this.api+'game/', function(res){
+          that.games = res.data;
+        },'json')
+      },
+      trigger(){
+        if(this.on){
+          this.stop()
+        }else{
+          this.start()
+        }
+      },
+      btn(s){
+        this.connect = s;
+      },
+      start(){
+        if(this.game.name && this.node.name){
+          let s = this.node;
+          this.connect = 2
+          this.run(this.game.exe, s.ip, s.port, s.user, s.pass);
+        }
+      },
+      stop: function(){
+        let that = this;
+        that.connect = 3;
+        dll.StopProxy.async((err,res)=>{
+          that.on = false;
+          //alert('已经停止');
+          that.connect = 0;
+        });
+      },
+      run: function(exe, ip,port,user,pass){
+        if(this.on){
+          dll.StopProxy();
+        }else{
+
+        }
+        let that = this;
+        dll.CheckSocks5.async(ip, port, user, pass,(err, res)=>{
+          // alert(res);
+          //console.log(that.game)
+          //console.log(that.node)
+          if(res){
+            dll.SetProxy.async(false, that.game.exe, that.node.ip, that.node.port, that.node.user, that.node.pass, 'VeryTiredR0Proxy666', function(err, res){
+              //alert(res)
+              if(res){
+                that.on = true;
+                that.connect = 1;
+              }else{
+                that.on = false;
+                that.connect = 0;
+              }
+            });
+
+          }else{
+            that.on = false;
+            that.connect = 0;
+            alert('加速失败，请选择其他节点');
+          }
+        })
+      },
+      nodeClick: function (name){
+        this.node = name;
+        //this.change()
+      },
+      gameClick: function(name){
+        this.game = name;//alert(name)
+        let that = this;
+        $.get(this.api+'node/?game='+this.game.name, function(res){
+          that.nodes = res.data;
+        },'json')
+        //alert(this.game)
+      },
+      open: function(link){
+        ele.shell.openExternal(link)
+      }
+    }
+  })
+
+
+  /*
+  function plus() {
+    let inputs = document.getElementById('plus').getElementsByTagName('input');
+    let a = Number(inputs[1].value), b = Number(inputs[0].value);
+    // Call C++ function Add
+    let sum = Dll.Add(a, b);
+    console.log(`${a}+${b}=${sum}`);
+    inputs[2].value = sum;
+  }
+
+  function strlen(el) {
+    // Call C++ function StrLength
+    document.getElementById('str-length').innerHTML = Dll.StrLength(el.value);
+  }
+  */
+
+
+</script>
+
+
+</html>
+
